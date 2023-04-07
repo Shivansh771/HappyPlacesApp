@@ -1,5 +1,6 @@
 package com.example.happyplaces
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
@@ -8,6 +9,7 @@ import android.net.Uri
 import android.os.Binder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -22,6 +24,7 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -70,27 +73,41 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode== Activity.RESULT_OK){
+            if(requestCode== GALLERY){
+                if(data!=null){
+                    val contentURI=data.data
+                    try{
+                        val selectedImageBitmap=MediaStore.Images.Media.getBitmap(this.contentResolver,contentURI)
+                        binding.ivPlaceImage.setImageBitmap(selectedImageBitmap)
+                    }catch(e:IOException){
+                        e.printStackTrace()
+                        MotionToast.createColorToast(this@AddHappyPlaceActivity,"Error","Failed to load image from gallery",MotionToastStyle.ERROR,MotionToast.GRAVITY_BOTTOM,MotionToast.SHORT_DURATION, ResourcesCompat.getFont(this,www.sanju.motiontoast.R.font.helvetica_regular))
+                    }
+                }
+            }
+        }
+    }
+
     private fun choosePhotoFromGallery() {
-        Dexter.withActivity(this).withPermissions(
+        Dexter.withContext(this@AddHappyPlaceActivity).withPermissions(
             android.Manifest.permission.READ_EXTERNAL_STORAGE
             , android.Manifest.permission.WRITE_EXTERNAL_STORAGE
         ).withListener(object :MultiplePermissionsListener{
             override fun  onPermissionsChecked(report:MultiplePermissionsReport?) {
                 if(report!!.areAllPermissionsGranted()){
-                    MotionToast.createColorToast(this@AddHappyPlaceActivity,
-                        "Permission Granted \uD83D\uDE0D",
-                        "The Permission to access storage is granted, Now you can select an image from gallery",
-                        MotionToastStyle.SUCCESS,
-                        MotionToast.GRAVITY_BOTTOM,
-                        MotionToast.SHORT_DURATION,
-                        ResourcesCompat.getFont(this@AddHappyPlaceActivity,www.sanju.motiontoast.R.font.helvetica_regular))
+                    val galleryIntent=Intent(Intent.ACTION_PICK,MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    startActivityForResult(galleryIntent,GALLERY)
 
                 }
             }
-            override fun  onPermissionRationaleShouldBeShown(permissions:MutableList<PermissionRequest> ,token: PermissionToken ) {
+            override fun  onPermissionRationaleShouldBeShown(permissions:MutableList<PermissionRequest>? ,token: PermissionToken? ) {
+                token?.continuePermissionRequest()
                 showRationalDialogForPermissions()
             }
-        }).onSameThread().check();
+        }).withErrorListener { Toast.makeText(this@AddHappyPlaceActivity, it.name, Toast.LENGTH_SHORT).show() }.check();
         }
 
     private fun showRationalDialogForPermissions() {
@@ -115,5 +132,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         val sdf=SimpleDateFormat(myFormat, Locale.getDefault())
         binding.etDate.setText(sdf.format(cal.time).toString())
 
+    }
+    companion object{
+        private const val GALLERY=1
     }
 }
