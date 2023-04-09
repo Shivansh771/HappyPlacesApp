@@ -106,7 +106,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                         val dbHandler=DatabaseHandler(this)
                         val addHappyPlace=dbHandler.addHappyPlace(happyPlaceModal)
                         if(addHappyPlace>0){
-                            MotionToast.createColorToast(this@AddHappyPlaceActivity,"Success","Happy place inserted successfully ",MotionToastStyle.SUCCESS,MotionToast.GRAVITY_BOTTOM,MotionToast.SHORT_DURATION,                ResourcesCompat.getFont(this,www.sanju.motiontoast.R.font.helvetica_regular))
+                            setResult(Activity.RESULT_OK)
                             finish()
                         }
 
