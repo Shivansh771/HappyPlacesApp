@@ -19,7 +19,7 @@ class HappyPlaceDetailActivity : AppCompatActivity() {
 
         var happyPlaceDetailModel:HappyPlaceModel?=null
         if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
-            happyPlaceDetailModel=intent.getSerializableExtra(MainActivity.EXTRA_PLACE_DETAILS) as HappyPlaceModel
+            happyPlaceDetailModel= intent.getParcelableExtra(MainActivity.EXTRA_PLACE_DETAILS) as HappyPlaceModel?
         }
         if(happyPlaceDetailModel!=null){
             setSupportActionBar(binding.toolbarHappyPlaceDetail)
