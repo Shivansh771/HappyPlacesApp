@@ -27,9 +27,16 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setupHappyPlacesRecyclerView(happyPlaceList:ArrayList<HappyPlaceModel>){
         binding.rvHappyPlacesList.layoutManager=LinearLayoutManager(this)
-          binding.rvHappyPlacesList.setHasFixedSize(true)
+        binding.rvHappyPlacesList.setHasFixedSize(true)
         val placesAdapter=HappyPlacesAdapter(happyPlaceList)
         binding.rvHappyPlacesList.adapter=placesAdapter
+        placesAdapter.setOnClickListener(object:  HappyPlacesAdapter.OnClickListener{
+            override fun onClick(position: Int, model: HappyPlaceModel) {
+                val intent = Intent(this@MainActivity, HappyPlaceDetailActivity::class.java)
+                intent.putExtra(EXTRA_PLACE_DETAILS,model)
+                startActivity(intent)
+            }
+        })
     }
     private fun getHappyPlacesListFromLocalDB(){
         val dbHandler=DatabaseHandler(this)
@@ -61,5 +68,6 @@ class MainActivity : AppCompatActivity() {
     }
     companion object{
         var ADD_PLACE_ACTIVITY_REQUEST_CODE=1
+        var EXTRA_PLACE_DETAILS="extra place details"
     }
 }
