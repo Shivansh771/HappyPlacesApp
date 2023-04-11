@@ -41,8 +41,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var dateSetListner: DatePickerDialog.OnDateSetListener
     private var saveImageToInternalStorage:Uri?=null
     private var mLatitude:Double=0.0
-    private val mLongitude:Double=0.0
-
+    private var mLongitude:Double=0.0
+    private   var mHappyPlaceDetails:HappyPlaceModel?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=ActivityAddHappyPlaceBinding.inflate(layoutInflater)
@@ -52,11 +52,30 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding.toolbar.setNavigationOnClickListener{
             onBackPressed()
         }
+        if(intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
+            mHappyPlaceDetails= intent.getParcelableExtra(MainActivity.EXTRA_PLACE_DETAILS)
+        }
         dateSetListner= DatePickerDialog.OnDateSetListener{
             view, year, month, dayOfMonth ->  cal.set(Calendar.YEAR,year)
             cal.set(Calendar.MONTH,month)
             cal.set(Calendar.DAY_OF_MONTH,dayOfMonth)
             updateDateInView()
+        }
+        updateDateInView()
+        if(mHappyPlaceDetails!=null){
+            supportActionBar?.title="Edit Happy place"
+            binding.etTitle.setText(mHappyPlaceDetails!!.title)
+            binding.etDescription.setText(mHappyPlaceDetails!!.description)
+            binding.etDate.setText(mHappyPlaceDetails!!.date)
+            binding.etLocation.setText(mHappyPlaceDetails!!.location)
+            mLatitude=mHappyPlaceDetails!!.latitude
+            mLongitude=mHappyPlaceDetails!!.longitude
+            saveImageToInternalStorage=Uri.parse(
+                mHappyPlaceDetails!!.image
+            )
+            binding.ivPlaceImage.setImageURI(saveImageToInternalStorage)
+            binding.btnSave.text="UPDATE"
+
         }
         binding.etDate.setOnClickListener(this)
         binding.tvAddImage.setOnClickListener(this)
@@ -101,13 +120,19 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
                     }
                     else->{
-                        val happyPlaceModal=HappyPlaceModel(0,binding.etTitle.text.toString(),saveImageToInternalStorage.toString(),binding.etDescription.text.toString(),
+                        val happyPlaceModal=HappyPlaceModel(if(mHappyPlaceDetails==null)0 else mHappyPlaceDetails!!.id,binding.etTitle.text.toString(),saveImageToInternalStorage.toString(),binding.etDescription.text.toString(),
                         binding.etDate.text.toString(),binding.etLocation.text.toString(),mLatitude,mLongitude)
                         val dbHandler=DatabaseHandler(this)
+                        if(mHappyPlaceDetails==null){
                         val addHappyPlace=dbHandler.addHappyPlace(happyPlaceModal)
                         if(addHappyPlace>0){
                             setResult(Activity.RESULT_OK)
                             finish()
+                        }}else{
+                            val updateHappyPlace=dbHandler.UpdateHappyPlace(happyPlaceModal)
+                            if(updateHappyPlace>0){
+                                setResult(Activity.RESULT_OK)
+                                finish()
                         }
 
 
@@ -115,8 +140,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     }
             }
             }
-        }
-    }
+        }}}
+
 
     public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)

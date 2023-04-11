@@ -6,11 +6,15 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.happyplaces.adapters.HappyPlacesAdapter
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityMainBinding
 import com.example.happyplaces.models.HappyPlaceModel
+import com.example.happyplaces.utils.SwipeToDeleteCallback
+import com.example.happyplaces.utils.SwipeToEditCallback
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -28,7 +32,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupHappyPlacesRecyclerView(happyPlaceList:ArrayList<HappyPlaceModel>){
         binding.rvHappyPlacesList.layoutManager=LinearLayoutManager(this)
         binding.rvHappyPlacesList.setHasFixedSize(true)
-        val placesAdapter=HappyPlacesAdapter(happyPlaceList)
+        val placesAdapter=HappyPlacesAdapter(this,happyPlaceList)
         binding.rvHappyPlacesList.adapter=placesAdapter
         placesAdapter.setOnClickListener(object:  HappyPlacesAdapter.OnClickListener{
             override fun onClick(position: Int, model: HappyPlaceModel) {
@@ -37,6 +41,28 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         })
+        val editSwipeHandler=object : SwipeToEditCallback(this)
+        {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter=binding.rvHappyPlacesList.adapter as HappyPlacesAdapter
+                adapter.notifyEditItem(this@MainActivity,viewHolder.adapterPosition,
+                    ADD_PLACE_ACTIVITY_REQUEST_CODE)
+                }
+        }
+        val editItemTouchHelper=ItemTouchHelper(editSwipeHandler)
+        editItemTouchHelper.attachToRecyclerView(binding.rvHappyPlacesList)
+
+        val deleteSwipeHandler=object : SwipeToDeleteCallback(this)
+        {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter=binding.rvHappyPlacesList.adapter as HappyPlacesAdapter
+               adapter.removeAt(viewHolder.adapterPosition)
+                getHappyPlacesListFromLocalDB()
+            }
+        }
+        val deleteItemTouchHelper=ItemTouchHelper(deleteSwipeHandler)
+        deleteItemTouchHelper.attachToRecyclerView(binding.rvHappyPlacesList)
+
     }
     private fun getHappyPlacesListFromLocalDB(){
         val dbHandler=DatabaseHandler(this)
